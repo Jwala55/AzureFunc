@@ -2,65 +2,75 @@ const {
     CosmosClient
 } = require("@azure/cosmos");
 
+
+
 const endpoint = "https://cosmos-ingage.documents.azure.com:443/";
 const key = "DI96w7N4PlVBw3ytnP7lCP6umh8Ck4Q4H9NRYJHilm8gPXV7JPWIkxm7cQKUAR2hyEqlbpralM4grUokHJRdXw==";
 
 const cosmosClient = new CosmosClient({ endpoint, key });
-const database = cosmosClient.database('ingage').container('logs');
+const database = cosmosClient.database('ingage').container('transactions');
 
 module.exports = async function (context, req) {
     context.log("JavaScript HTTP trigger function processed a request.");
-    console.log(req.body);
 
     const querycus = {
-        query: 'SELECT c.customer.customerDetails.mobile FROM c WHERE c.customer.customerDetails.mobile = @mobile',
+        query: 'SELECT * FROM c WHERE c.customer.customerDetails.mobile = @mobile ORDER BY c._ts DESC',
         parameters: [{
             name: '@mobile',
-            value: '91999999999'
+            value: req.body.customer.customerDetails.mobile
         }
-            // {
-            //     name: '@name',
-            //     value: req.body.customer.customerDetails.name
-            // },
-            // {
-            //     name: '@email',
-            //     value: req.body.customer.customerDetails.email
-            // }
         ]
     };
 
     const {
         resources: result
     } = await database.items.query(querycus).fetchAll();
-
-    context.log(result);
-
-    const customerData = req.body;
-    context.log(customerData);
+    // context.log(result);
 
     if (Object.keys(result).length != 0) {   //checks if the customer is present, creates a doc for customer
+        let flag = 0;
+        for (let i = 0; i < result.length; i++) {
+            if (result[i].bill.billNumber === req.body.bill.billNumber) {
+                flag++;
+            }
+        }
 
-        database.items.create({
-            ...(req.body || {}),
-            client: 'customer'
-        });
+        if (flag === 0) {
+            const increTotalTrans = result[0].totalTrans + 1;
+            const increTransVal = result[0].totalTransValue + req.body.bill.billAmt;
 
-        context.res = {
-            // status: 200, /* Defaults to 200 */
-            body: "customer is there"
+            context.log(increTotalTrans + " " + increTransVal);
 
-        };
+            database.items.create({
+                ...(req.body || {}),
+                client: 'customer',
+                totalTrans: increTotalTrans,
+                totalTransValue: increTransVal
+            });
+
+            context.res = {
+                body: "Updated Customer data"
+
+            };
+        }
+        else {
+            context.res = {
+                body: "Cant use duplicate billNumber"
+            }
+        }
 
     }
 
     else {
-        // context.res = {
-        //     body: "Check customer"
-        // }
+
         database.items.create({
-            ...(req.body.customer || {}),
-            client: 'customer'
+            ...(req.body || {}),
+            totalTrans: 1,
+            totalTransValue: req.body.bill.billAmt
         });
+        context.res = {
+            body: "Customer Added"
+        }
     }
 
 }

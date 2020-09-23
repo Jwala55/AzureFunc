@@ -27,14 +27,61 @@ module.exports = async function (context, req) {
     const cus = {
         "customer": {
             "customerDetails": {
-                "mobile": "91999999999", // customer mobile number 
-                "name": "firstName", // name of customer 
-                "email": "m@m.co" // email of customer 
+                "mobile": "91999999999",
+                "name": "firstName",
+                "email": "m@m.co"
+            }
+        },
+        "bill": {
+            "billNumber": "SC01010101010109428357056",
+            "billAmt": 66.67,
+            "billGrossAmount": 70,
+            "billDiscount": 0,
+            "cashierId": "100979",
+            "companyCode": "",
+            "notes": "",
+            "returnBillNum": "",
+            "billType": "Regular",
+            "storeID": "",
+            "storeTerminalID": "",
+            "currency": "AED"
+        },
+        "billLineItems": {
+            "lineItems": [{
+                "stockNo": "ITEM ID 001",
+                "description": "Description of the item",
+                "markdownFlag": "N",
+                "quantity": 1,
+                "rate": 30,
+                "value": 30,
+                "discount": 0,
+                "amount": 28.57,
+                "grossAmount": 30,
+                "billNumber": "091000000000001"
+            }]
+        },
+        "paymentMode": {
+            "paymentModeDetails": [{
+                "payModeType": "Cash (SAR)",
+                "value": 50
             },
-            "totalTrans": "50",
-            "totalTransValue": "5050"
-
-        }
+            {
+                "payModeType": "Card payment Credit",
+                "value": 17
+            }
+            ]
+        },
+        "coupon": {
+            "couponDetails": {
+                "couponCode": "",
+                "couponValue": "",
+                "couponType": ""
+            }
+        },
+        "transDate": "2018-11-29T08:27:02.541Z",
+        "receiptId": "R7298869783",
+        "totalTrans": 50,
+        "totalTransValue": 5050
     }
     context.log(cus);
     db.items.create(cus);
